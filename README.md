@@ -265,12 +265,12 @@ http://localhost:8080
 * Transactional order processing
 * Cart total calculation
 * Proper entity relationships
+* Redis caching
 
 ---
 
 # 🧠 Future Improvements
 
-* Redis caching
 * Payment gateway integration
 * CI/CD pipeline
 * AWS deployment
