@@ -10,6 +10,7 @@ class CommerceFlowApplicationTests {
 
 	@Test
 	void contextLoads() {
+
 	}
 
 }
