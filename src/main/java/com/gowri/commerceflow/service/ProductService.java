@@ -7,6 +7,9 @@ import com.gowri.commerceflow.entity.Category;
 import com.gowri.commerceflow.entity.Product;
 import com.gowri.commerceflow.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -34,6 +37,7 @@ public class ProductService {
         return mapToResponse(product);
     }
 
+    @Cacheable(value = "productList")
     public Page<ProductResponse> getAllProducts(int page, int size, String sortBy) {
         Pageable pageable = PageRequest.of(page, size, Sort.by(sortBy).descending());
         return productRepository.findByActiveTrue(pageable).map(this::mapToResponse);
@@ -49,6 +53,7 @@ public class ProductService {
                 .build();
     }
 
+    @CacheEvict(value = "products", key = "#id")
     public ProductResponse updateProduct(long id, UpdateProductRequest request) {
 
         Product product = productRepository.findById(id).
@@ -102,5 +107,14 @@ public class ProductService {
                 maxPrice,
                 keyword, pageable
         ).map(this::mapToResponse);
+    }
+
+    @Cacheable(value = "products", key = "#id")
+    public ProductResponse getProductById(long id) {
+
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Product Not Found."));
+
+        return mapToResponse(product);
     }
 }
