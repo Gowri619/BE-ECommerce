@@ -5,12 +5,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.cache.RedisCacheConfiguration;
 import org.springframework.data.redis.cache.RedisCacheManager;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
-import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.GenericJacksonJsonRedisSerializer;
 import org.springframework.data.redis.serializer.RedisSerializationContext;
-import org.springframework.data.redis.serializer.RedisSerializer;
-import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 import java.time.Duration;
 
@@ -19,13 +15,12 @@ public class RedisConfig {
 
     @Bean
     public RedisCacheManager cacheManager(RedisConnectionFactory connectionFactory) {
+        GenericJacksonJsonRedisSerializer valueSerializer = new GenericJacksonJsonRedisSerializer();
         RedisCacheConfiguration configuration = RedisCacheConfiguration.defaultCacheConfig()
                 .entryTtl(Duration.ofMinutes(10))
                 .disableCachingNullValues()
                 .serializeValuesWith(
-                        RedisSerializationContext.SerializationPair.fromSerializer(RedisSerializer.string())
-                ).serializeValuesWith(
-                        RedisSerializationContext.SerializationPair.fromSerializer(RedisSerializer.json())
+                        RedisSerializationContext.SerializationPair.fromSerializer(valueSerializer)
                 );
 
         return RedisCacheManager.builder(connectionFactory)
