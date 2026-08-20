@@ -8,13 +8,21 @@ import com.gowri.commerceflow.repository.ProductRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -24,8 +32,37 @@ class ProductServiceTest {
     @Mock
     private ProductRepository productRepository;
 
+    @Mock
+    private CacheManager cacheManager;
+
+    @Mock
+    private Cache productListCache;
+
     @InjectMocks
     private ProductService productService;
+
+        @Test
+        void getAllProducts_readsRepositoryAndStoresStableCacheValueOnCacheMiss() {
+        Product product = Product.builder()
+            .name("iPhone 15")
+            .price(80000)
+            .stockQuantity(10)
+            .category(Category.ELECTRONICS)
+            .active(true)
+            .build();
+        when(cacheManager.getCache("productList")).thenReturn(productListCache);
+        when(productListCache.get(anyString())).thenReturn(null);
+        when(productRepository.findByActiveTrue(any())).thenReturn(
+            new PageImpl<>(List.of(product), PageRequest.of(0, 10), 1)
+        );
+
+        ProductResponse response = productService.getAllProducts(0, 10, "createdAt")
+            .getContent().get(0);
+
+        assertEquals("iPhone 15", response.getName());
+        verify(productRepository).findByActiveTrue(any());
+        verify(productListCache).put(eq("0:10:createdAt"), any());
+        }
 
     @Test
     void createProduct_savesAndReturnsProduct() {
